@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MultiRoutine — Minha Agenda Inteligente</title>
+    <!-- Google Fonts & Lucide Icons -->
+    <link href="https://googleapis.com" rel="stylesheet">
+    <script src="https://unpkg.com"></script>
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            
+            /* Nova Paleta de Cores Solicitada */
+            --color-job1: #10b981;     /* Verde - SFR */
+            --color-job2: #ef4444;     /* Vermelho - SAMU */
+            --color-job3: #f472b6;     /* Rosa - Estética */
+            --color-church: #06b6d4;   /* Azul Turquesa - Igreja */
+            --color-personal: #64748b; /* Cinza Muted - Pessoal */
+            --color-holiday: #f59e0b;  /* Amarelo Ouro - Feriado */
+            
+            --radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            transition: var(--transition);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 24px;
+        }
+
+        header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--color-job1), var(--color-job2), var(--color-job3));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn-theme {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-main);
+            border-radius: 12px;
+        }
+
+        .stat-icon {
+            padding: 8px;
+            border-radius: 8px;
+            color: white;
+        }
+
+        .stat-info h4 { font-size: 13px; color: var(--text-muted); }
+        .stat-info p { font-size: 18px; font-weight: 700; }
+
+        .filters {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-main);
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            text-align: left;
+            transition: var(--transition);
+        }
+
+        .filter-btn.active {
+            background: var(--text-main);
+            color: var(--bg-main);
+            border-color: var(--text-main);
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .calendar-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-nav {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-main);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .weekday {
+            text-align: center;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-muted);
+            padding: 8px 0;
+        }
+
+        .day-cell {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            height: 135px;
+            border-radius: 12px;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            transition: var(--transition);
+            overflow-y: auto;
+        }
+
+        .day-cell::-webkit-scrollbar { width: 4px; }
+        .day-cell::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .day-cell:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgb(0 0 0 / 0.05);
+        }
+
+        .day-number {
+            font-size: 13px;
+            font-weight: 600;
+            align-self: flex-end;
+            margin-bottom: 4px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .day-cell.today .day-number {
+            background: var(--text-main);
+            color: var(--bg-main);
+            border-radius: 50%;
+        }
+
+        .day-cell.other-month { opacity: 0.4; }
+
+        .event-tag {
+            font-size: 11px;
+            padding: 3px 6px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-shrink: 0;
+        }
+
+        .upcoming-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .upcoming-item {
+            padding: 10px;
+            border-left: 4px solid var(--border);
+            background: var(--bg-main);
+            border-radius: 0 8px 8px 0;
+            font-size: 13px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: var(--transition);
+            z-index: 1000;
+        }
+
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+
+        .modal {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 24px;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid var(--border);
+            transform: scale(0.95);
+            transition: var(--transition);
+        }
+
+        .modal-overlay.active .modal { transform: scale(1); }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--text-muted); }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-main); border-radius: 8px; outline: none;
+        }
+        
+        .time-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        .btn { padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 500; border: none; }
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-secondary { background: var(--border); color: var(--text-main); }
+
+        @media (max-width: 850px) {
+            .container { grid-template-columns: 1fr; }
+            .day-cell { height: 95px; }
+            .event-tag { font-size: 0; width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div class="logo">MultiRoutine</div>
+            <button class="btn-theme" onclick="toggleTheme()">
+                <i data-lucide="moon" id="theme-icon"></i>
+            </button>
+        </header>
+
+        <aside class="sidebar">
+            <div class="card">
+                <h3 style="margin-bottom: 14px; font-size: 16px;">Compromissos no Mês</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-icon" style="background: var(--color-job1);"><i data-lucide="briefcase" size="18"></i></div>
+                        <div class="stat-info"><h4>SFR</h4><p id="count-job1">0</p></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon" style="background: var(--color-job2);"><i data-lucide="briefcase" size="18"></i></div>
+                        <div class="stat-info"><h4>SAMU</h4><p id="count-job2">0</p></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon" style="background: var(--color-job3);"><i data-lucide="sparkles" size="18"></i></div>
+                        <div class="stat-info"><h4>Estética</h4><p id="count-job3">0</p></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon" style="background: var(--color-church);"><i data-lucide="heart" size="18"></i></div>
+                        <div class="stat-info"><h4>Igreja</h4><p id="count-church">0</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom: 14px; font-size: 16px;">Visualização</h3>
+                <div class="filters">
+                    <button class="filter-btn active" data-filter="all" onclick="changeFilter('all')"><i data-lucide="layers" size="16"></i> Agenda Completa</button>
+                    <button class="filter-btn" data-filter="job1" onclick="changeFilter('job1')"><span class="dot" style="background: var(--color-job1);"></span> Ver apenas SFR</button>
+                    <button class="filter-btn" data-filter="job2" onclick="changeFilter('job2')"><span class="dot" style="background: var(--color-job2);"></span> Ver apenas SAMU</button>
+                    <button class="filter-btn" data-filter="job3" onclick="changeFilter('job3')"><span class="dot" style="background: var(--color-job3);"></span> Ver apenas Estética</button>
+                    <button class="filter-btn" data-filter="church" onclick="changeFilter('church')"><span class="dot" style="background: var(--color-church);"></span> Ver apenas Igreja</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="font-size: 16px;">Próximos Compromissos</h3>
+                <div class="upcoming-list" id="upcoming-container"></div>
+            </div>
+        </aside>
+
+        <main class="calendar-section card">
+            <div class="calendar-header">
+                <h2 id="month-year-title" style="font-size: 20px; font-weight: 700;"></h2>
+                <div class="nav-buttons">
+                    <button class="btn-nav" onclick="prevMonth()"><i data-lucide="chevron-left" size="16"></i></button>
+                    <button class="btn-nav" onclick="nextMonth()"><i data-lucide="chevron-right" size="16"></i></button>
+                </div>
+            </div>
+            <div class="calendar-grid" id="calendar-grid"></div>
+        </main>
+    </div>
+
+    <!-- Modal Form -->
+    <div class="modal-overlay" id="modal-overlay" onclick="closeModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modal-title">Adicionar Horário</h3>
+                <button class="btn-nav" onclick="closeModal()"><i data-lucide="x" size="16"></i></button>
+            </div>
+            <form id="event-form" onsubmit="saveEvent(event)">
+                <input type="hidden" id="event-date">
+                <input type="hidden" id="event-id">
+                
+                <div class="form-group">
+                    <label for="event-type">Trabalho / Seleção</label>
+                    <select id="event-type">
+                        <option value="job1">SFR (Verde)</option>
+                        <option value="job2">SAMU (Vermelho)</option>
+                        <option value="job3">Estética (Rosa)</option>
+                        <option value="church">Igreja Extra (Azul Turquesa)</option>
+                        <option value="personal">Pessoal (Cinza Escuro)</option>
+                    </select>
+                </div>
+
+                <div class="time-row">
+                    <div class="form-group">
+                        <label for="event-time">Entrada / Início</label>
+                        <input type="time" id="event-time" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="event-endtime">Saída / Término</label>
+                        <input type="time" id="event-endtime" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="event-notes">Observações do Dia</label>
+                    <textarea id="event-notes" rows="3" placeholder="Anotações adicionais..."></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-danger" id="btn-delete" style="display:none;" onclick="deleteEvent()">Excluir</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentDate = new Date();
+        let events = JSON.parse(localStorage.getItem('multiroutine_events')) || {};
+        let currentFilter = 'all';
+
+        const monthsBR = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        const weekdaysBR = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+        const staticHolidays = {
+            "01-01": "Ano Novo", "04-21": "Tiradentes", "05-01": "Dia do Trabalho",
+            "09-07": "Independência", "10-12": "Nossa Sra. Aparecida", "11-02": "Finados",
+            "11-15": "Proclamação da República", "11-20": "Consciência Negra", "12-25": "Natal"
+        };
+
+        const jobNames = { job1: "SFR", job2: "SAMU", job3: "Estética", church: "Igreja", personal: "Pessoal" };
+        const baseEnsaioDate = new Date(2026, 4, 19); 
+
+        function getWeekOfMonth(date) {
+            const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+            let dayOfWeek = firstDay.getDay();
+            let start = 1;
+            let week = 1;
+            while (start <= date.getDate()) {
+                if (dayOfWeek === date.getDay() && start === date.getDate()) return week;
+                if (dayOfWeek === 6) week++;
+                dayOfWeek = (dayOfWeek + 1) % 7;
+                start++;
+            }
+            return week;
+        }
+
+        function getChurchEvent(dateObj) {
+            const dayOfWeek = dateObj.getDay();
+            
+            if (dayOfWeek === 2) {
+                if (dateObj >= baseEnsaioDate) {
+                    const diffTime = Math.abs(dateObj - baseEnsaioDate);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    if (diffDays % 14 === 0) return "🎵 Ensaio dos Jovens";
+                }
+            }
+            
+            if (dayOfWeek === 6) {
+                const weekNum = getWeekOfMonth(dateObj);
+                if (weekNum === 1) return "A: Culto das Crianças";
+                if (weekNum === 2) return "⛪ Culto das Irmãs";
+                if (weekNum === 3) return "⛪ Culto dos Jovens";
+                if (weekNum === 4) return "⛪ Culto dos Varões";
+                return "A: Culto";
+            }
+            
+            if (dayOfWeek === 0) {
+                const weekNum = getWeekOfMonth(dateObj);
+                if (weekNum === 3) return "🍞 Culto de Santa Ceia";
+                return "⛪ Culto da Família";
+            }
+            
+            return null;
+        }
+
+        function initCalendar() { lucide.createIcons(); renderCalendar(); updateDashboard(); }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            document.getElementById('month-year-title').innerText = `${monthsBR[month]} ${year}`;
+
+            weekdaysBR.forEach(day => {
+                const h = document.createElement('div'); h.className = 'weekday'; h.innerText = day; grid.appendChild(h);
+            });
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const lastDay = new Date(year, month + 1, 0).getDate();
+            const prevLastDay = new Date(year, month, 0).getDate();
+
+            for (let x = firstDayIndex; x > 0; x--) {
+                const cell = document.createElement('div'); cell.className = 'day-cell other-month';
+                cell.innerHTML = `<span class="day-number">${prevLastDay - x + 1}</span>`;
+                grid.appendChild(cell);
+            }
+
+            for (let i = 1; i <= lastDay; i++) {
+                const cell = document.createElement('div'); cell.className = 'day-cell';
+                const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                const holidayKey = `${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                const cellDateObj = new Date(year, month, i);
+
+                if (i === new Date().getDate() && month === new Date().getMonth() && year === new Date().getFullYear()) {
+                    cell.classList.add('today');
+                }
+
+                cell.innerHTML = `<span class="day-number">${i}</span>`;
+                cell.onclick = () => openModal(dateKey);
+
+                if (staticHolidays[holidayKey]) {
+                    const tag = document.createElement('div'); tag.className = 'event-tag';
+                    tag.style.background = 'var(--color-holiday)'; tag.innerText = `🎉 ${staticHolidays[holidayKey]}`;
+                    cell.appendChild(tag);
+                }
+
+                if (currentFilter === 'all' || currentFilter === 'church') {
+                    const churchTitle = getChurchEvent(cellDateObj);
+                    if (churchTitle) {
+                        const tag = document.createElement('div'); tag.className = 'event-tag';
+                        tag.style.background = 'var(--color-church)'; tag.innerText = churchTitle;
+                        cell.appendChild(tag);
+                    }
+                }
+
+                if (events[dateKey]) {
+                    events[dateKey].forEach(ev => {
+                        if (currentFilter !== 'all' && ev.type !== currentFilter) return;
+                        const tag = document.createElement('div'); tag.className = 'event-tag';
+                        tag.style.background = `var(--color-${ev.type})`;
+                        tag.innerText = `${ev.time}-${ev.endtime || '??'} ${jobNames[ev.type]}`;
+                        tag.onclick = (e) => { e.stopPropagation(); openModal(dateKey, ev.id); };
+                        cell.appendChild(tag);
+                    });
+                }
+                grid.appendChild(cell);
+            }
+        }
+
+        function prevMonth() { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); }
+        function nextMonth() { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); }
+
+        function openModal(dateStr, eventId = null) {
+            const overlay = document.getElementById('modal-overlay');
+            document.getElementById('event-date').value = dateStr;
+            document.getElementById('event-id').value = eventId || '';
+            
+            if (eventId) {
+                document.getElementById('modal-title').innerText = "Editar Horário";
+                const ev = events[dateStr].find(e => e.id == eventId);
+                document.getElementById('event-type').value = ev.type;
+                document.getElementById('event-time').value = ev.time;
+                document.getElementById('event-endtime').value = ev.endtime || '';
+                document.getElementById('event-notes').value = ev.notes || '';
+                document.getElementById('btn-delete').style.display = 'block';
+            } else {
+                document.getElementById('modal-title').innerText = "Adicionar Trabalho";
+                document.getElementById('event-form').reset();
+                document.getElementById('btn-delete').style.display = 'none';
+            }
+            overlay.classList.add('active');
+        }
+
+        function closeModal() { document.getElementById('modal-overlay').classList.remove('active'); }
+
+        function saveEvent(e) {
+            e.preventDefault();
+            const dateStr = document.getElementById('event-date').value;
+            const id = document.getElementById('event-id').value;
+
+            const newEvent = {
+                id: id || Date.now(),
+                title: jobNames[document.getElementById('event-type').value],
+                type: document.getElementById('event-type').value,
+                time: document.getElementById('event-time').value,
+                endtime: document.getElementById('event-endtime').value,
+                notes: document.getElementById('event-notes').value
+            };
+
+            if (!events[dateStr]) events[dateStr] = [];
+            if (id) {
+                const index = events[dateStr].findIndex(e => e.id == id);
+                events[dateStr][index] = newEvent;
+            } else {
+                events[dateStr].push(newEvent);
+            }
+
+            events[dateStr].sort((a,b) => a.time.localeCompare(b.time));
+            localStorage.setItem('multiroutine_events', JSON.stringify(events));
+            closeModal(); renderCalendar(); updateDashboard();
+        }
+
+        function deleteEvent() {
+            const dateStr = document.getElementById('event-date').value;
+            const id = document.getElementById('event-id').value;
+            events[dateStr] = events[dateStr].filter(e => e.id != id);
+            if(events[dateStr].length === 0) delete events[dateStr];
+            localStorage.setItem('multiroutine_events', JSON.stringify(events));
+            closeModal(); renderCalendar(); updateDashboard();
+        }
+
+        function changeFilter(filterType) {
+            currentFilter = filterType;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-filter="${filterType}"]`).classList.add('active');
+            renderCalendar();
+        }
+
+        function updateDashboard() {
+            let job1Count = 0, job2Count = 0, job3Count = 0, churchCount = 0;
+            const currentMonth = currentDate.getMonth() + 1;
+            const currentYear = currentDate.getFullYear();
+            let upcomingEvents = [];
+
+            const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+            for (let d = 1; d <= daysInMonth; d++) {
+                if (getChurchEvent(new Date(currentYear, currentMonth - 1, d))) churchCount++;
+            }
+
+            Object.keys(events).forEach(dateStr => {
+                const [year, month, day] = dateStr.split('-').map(Number);
+                if (month === currentMonth && year === currentYear) {
+                    events[dateStr].forEach(ev => {
+                        if (ev.type === 'job1') job1Count++;
+                        if (ev.type === 'job2') job2Count++;
+                        if (ev.type === 'job3') job3Count++;
+                        if (ev.type === 'church') churchCount++;
+                    });
+                }
+
+                if (new Date(year, month - 1, day) >= new Date().setHours(0,0,0,0)) {
+                    events[dateStr].forEach(ev => {
+                        upcomingEvents.push({ ...ev, dateFormatted: `${String(day).padStart(2,'0')}/${String(month).padStart(2,'0')}` });
+                    });
+                }
+            });
+
+            document.getElementById('count-job1').innerText = job1Count;
+            document.getElementById('count-job2').innerText = job2Count;
+            document.getElementById('count-job3').innerText = job3Count;
+            document.getElementById('count-church').innerText = churchCount;
+
+            const container = document.getElementById('upcoming-container');
+            container.innerHTML = upcomingEvents.length === 0 ? '<p style="color:var(--text-muted); font-size:13px;">Nenhum turno agendado.</p>' : '';
+            upcomingEvents.slice(0, 5).forEach(ev => {
+                const item = document.createElement('div'); item.className = 'upcoming-item';
+                item.style.borderColor = `var(--color-${ev.type})`;
+                item.innerHTML = `<strong>${ev.dateFormatted} (${ev.time} - ${ev.endtime || '??'})</strong><br>Turno: ${jobNames[ev.type]}`;
+                container.appendChild(item);
+            });
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const target = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', target);
+            document.getElementById('theme-icon').setAttribute('data-lucide', target === 'dark' ? 'sun' : 'moon');
+            lucide.createIcons();
+        }
+
+        window.onload = initCalendar;
+    </script>
+</body>
+</html>
